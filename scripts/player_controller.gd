@@ -20,6 +20,13 @@ enum PlayerColor {
 	BLUE,
 }
 
+const MAX_HEALTH := 100
+const PUNCH_DAMAGE := 10
+const PUNCH_DURATION := 0.87
+const PUNCH_ACTIVE_START := 0.20
+const PUNCH_ACTIVE_END := 0.38
+const PUNCH_KNOCKBACK := 4.5
+
 ## Lane movement speed (units/second) at full run, tuned for a ~0.4-scale
 ## character (roughly 0.7 m tall).
 @export var move_speed: float = 1.2
@@ -72,10 +79,13 @@ enum PlayerColor {
 @export var player_index: int = 1
 ## Current RGB state. Determines solid/phase interaction with the opponent.
 @export var current_color: PlayerColor = PlayerColor.RED
+@export var health: int = MAX_HEALTH
 
 @onready var _armature: Node3D = $Armature
 @onready var _locomotion: AnimationPlayer = $pack1
 @onready var _color_indicator: MeshInstance3D = $ColorIndicator
+@onready var _attack_hitbox: Area3D = $AttackHitbox
+@onready var _attack_shape: CollisionShape3D = $AttackHitbox/CollisionShape3D
 
 var _current_state: LocomotionState = LocomotionState.IDLE
 var _current_animation: StringName = &""
@@ -101,6 +111,10 @@ var _red_action: StringName = &"color_red"
 var _green_action: StringName = &"color_green"
 var _blue_action: StringName = &"color_blue"
 var _color_materials: Array[StandardMaterial3D] = []
+var _attack_action: StringName = &"attack"
+var _attack_elapsed := -1.0
+var _attack_hit_targets: Dictionary = {}
+var _hitstun_timer := 0.0
 
 func _ready() -> void:
 	if player_index == 2:
@@ -110,6 +124,7 @@ func _ready() -> void:
 		_red_action = &"p2_red"
 		_green_action = &"p2_green"
 		_blue_action = &"p2_blue"
+		_attack_action = &"p2_attack"
 	add_to_group(&"players")
 	_build_color_materials()
 	_apply_color()
@@ -160,18 +175,56 @@ func _get_opponent() -> PlayerController:
 
 func _physics_process(delta: float) -> void:
 	_process_color_input()
+	_process_attack(delta)
 	_get_input()
-	_update_movement(delta)
+	if _hitstun_timer > 0.0:
+		_hitstun_timer = maxf(_hitstun_timer - delta, 0.0)
+		velocity.z = move_toward(velocity.z, 0.0, ground_deceleration * delta)
+	else:
+		_update_movement(delta)
 	_update_gravity(delta)
 	_handle_jump()
 	_update_facing()
 	_update_interaction()
 	move_and_slide()
-	_update_animation_state()
-	_update_animation_speed()
+	if _attack_elapsed < 0.0:
+		_update_animation_state()
+		_update_animation_speed()
 	_constrain_to_gameplay_plane()
 	_update_coyote_and_buffer_timers(delta)
 	_was_grounded = is_on_floor()
+
+func _process_attack(delta: float) -> void:
+	if _attack_elapsed < 0.0:
+		if Input.is_action_just_pressed(_attack_action) and _hitstun_timer <= 0.0:
+			_attack_elapsed = 0.0
+			_attack_hit_targets.clear()
+			_attack_hitbox.monitoring = false
+			_locomotion.play(&"Punch_Jab", animation_blend_time)
+		return
+	_attack_elapsed += delta
+	var active := _attack_elapsed >= PUNCH_ACTIVE_START and _attack_elapsed < PUNCH_ACTIVE_END
+	var hitbox_target := global_position + get_facing_direction() * 0.44
+	_attack_shape.position.z = to_local(hitbox_target).z
+	_attack_hitbox.monitoring = active
+	if active:
+		for body in _attack_hitbox.get_overlapping_bodies():
+			if body is PlayerController and body != self and not _attack_hit_targets.has(body):
+				_attack_hit_targets[body] = true
+				body.take_punch(self)
+	if _attack_elapsed >= PUNCH_DURATION:
+		_attack_elapsed = -1.0
+		_attack_hitbox.monitoring = false
+
+func take_punch(attacker: PlayerController) -> void:
+	if health <= 0:
+		return
+	health = max(health - PUNCH_DAMAGE, 0)
+	_hitstun_timer = 0.25
+	velocity.y = 0.0
+	velocity.z = signf(global_position.z - attacker.global_position.z) * PUNCH_KNOCKBACK
+	_current_animation = &""
+	$pack2.play(&"Hit_Knockback", animation_blend_time)
 
 func _process_color_input() -> void:
 	var new_color: PlayerColor = current_color
