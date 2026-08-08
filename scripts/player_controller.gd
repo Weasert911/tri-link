@@ -12,6 +12,14 @@ enum LocomotionState {
 	LANDING,
 }
 
+## The player's RGB state. Same color as the opponent means solid
+## (player-vs-player collision active); different colors phase through.
+enum PlayerColor {
+	RED,
+	GREEN,
+	BLUE,
+}
+
 ## Lane movement speed (units/second) at full run, tuned for a ~0.4-scale
 ## character (roughly 0.7 m tall).
 @export var move_speed: float = 1.2
@@ -62,9 +70,12 @@ enum LocomotionState {
 ## Player index. 1 uses the primary action set (move_left/move_right/jump),
 ## 2 uses the secondary set (p2_move_left/p2_move_right/p2_jump).
 @export var player_index: int = 1
+## Current RGB state. Determines solid/phase interaction with the opponent.
+@export var current_color: PlayerColor = PlayerColor.RED
 
 @onready var _armature: Node3D = $Armature
 @onready var _locomotion: AnimationPlayer = $pack1
+@onready var _color_indicator: MeshInstance3D = $ColorIndicator
 
 var _current_state: LocomotionState = LocomotionState.IDLE
 var _current_animation: StringName = &""
@@ -86,30 +97,93 @@ var _landing_animation_playing: bool = false
 var _move_left_action: StringName = &"move_left"
 var _move_right_action: StringName = &"move_right"
 var _jump_action: StringName = &"jump"
+var _red_action: StringName = &"color_red"
+var _green_action: StringName = &"color_green"
+var _blue_action: StringName = &"color_blue"
+var _color_materials: Array[StandardMaterial3D] = []
 
 func _ready() -> void:
 	if player_index == 2:
 		_move_left_action = &"p2_move_left"
 		_move_right_action = &"p2_move_right"
 		_jump_action = &"p2_jump"
+		_red_action = &"p2_red"
+		_green_action = &"p2_green"
+		_blue_action = &"p2_blue"
+	add_to_group(&"players")
+	_build_color_materials()
+	_apply_color()
 	_base_armature_scale = _armature.scale
 	_plane_x = global_position.x if is_zero_approx(gameplay_plane_x) else gameplay_plane_x
 	_was_grounded = is_on_floor()
 	_configure_animation_looping()
 	_play_animation(&"Idle")
 
+func _build_color_materials() -> void:
+	var colors: Array[Color] = [
+		Color(1.0, 0.16, 0.16),
+		Color(0.18, 1.0, 0.2),
+		Color(0.22, 0.42, 1.0),
+	]
+	for c in colors:
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = c
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.emission_enabled = true
+		mat.emission = c
+		mat.emission_energy_multiplier = 2.0
+		_color_materials.append(mat)
+
+func _apply_color() -> void:
+	if _color_indicator != null and not _color_materials.is_empty():
+		_color_indicator.material_override = _color_materials[current_color]
+	_update_interaction()
+
+## Player-vs-player interaction rule: same color is solid, different colors
+## phase through. Re-evaluated every physics frame (the opponent's color may
+## have changed), so both bodies always agree. Environment collision is
+## unaffected.
+func _update_interaction() -> void:
+	var solid: bool = _get_opponent() == null or _get_opponent().current_color == current_color
+	collision_layer = 6 if solid else 2
+	collision_mask = 5 if solid else 1
+
+var _opponent: PlayerController = null
+
+func _get_opponent() -> PlayerController:
+	if _opponent == null or not is_instance_valid(_opponent):
+		for node in get_tree().get_nodes_in_group(&"players"):
+			if node != self:
+				_opponent = node
+				break
+	return _opponent
+
 func _physics_process(delta: float) -> void:
+	_process_color_input()
 	_get_input()
 	_update_movement(delta)
 	_update_gravity(delta)
 	_handle_jump()
 	_update_facing()
+	_update_interaction()
 	move_and_slide()
 	_update_animation_state()
 	_update_animation_speed()
 	_constrain_to_gameplay_plane()
 	_update_coyote_and_buffer_timers(delta)
 	_was_grounded = is_on_floor()
+
+func _process_color_input() -> void:
+	var new_color: PlayerColor = current_color
+	if Input.is_action_just_pressed(_red_action):
+		new_color = PlayerColor.RED
+	elif Input.is_action_just_pressed(_green_action):
+		new_color = PlayerColor.GREEN
+	elif Input.is_action_just_pressed(_blue_action):
+		new_color = PlayerColor.BLUE
+	if new_color != current_color:
+		current_color = new_color
+		_apply_color()
 
 func _get_input() -> void:
 	# 2.5D gameplay lane: Z is forward/back movement along the arena lane
