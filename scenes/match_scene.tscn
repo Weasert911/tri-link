@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://dg6qd4u25c8vr"]
+
+[ext_resource type="PackedScene" uid="uid://duqxh236essnc" path="res://scenes/prt_scene.tscn" id="1_arena"]
+[ext_resource type="Script" uid="uid://cumqimb77qx6y" path="res://scripts/match_controller.gd" id="2_match"]
+[ext_resource type="Script" uid="uid://dgec3no3q5m53" path="res://scripts/toon_renderer.gd" id="3_toon"]
+[ext_resource type="Script" uid="uid://bf7vy3nclegeo" path="res://scripts/combat_feedback.gd" id="4_feedback"]
+
+[node name="Match" type="Node3D" unique_id=1780961938]
+
+[node name="Arena" parent="." unique_id=1061825407 instance=ExtResource("1_arena")]
+
+[node name="MatchController" type="Node" parent="." unique_id=1147165343]
+script = ExtResource("2_match")
+
+[node name="ToonRenderer" type="Node" parent="." unique_id=937894465]
+script = ExtResource("3_toon")
+outline_width = 0.001
+
+[node name="CombatFeedback" type="Node" parent="." unique_id=1895286541]
+script = ExtResource("4_feedback")
