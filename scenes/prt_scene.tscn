@@ -4237,148 +4237,151 @@ shape = SubResource("ConvexPolygonShape3D_mcdog")
 [node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/16/StaticBody3D" unique_id=54871054]
 shape = SubResource("ConvexPolygonShape3D_a3dyy")
 
-[node name="17" type="MeshInstance3D" parent="room/Walls" unique_id=1805623397]
+[node name="back" type="Node3D" parent="room/Walls" unique_id=231298353]
+visible = false
+
+[node name="17" type="MeshInstance3D" parent="room/Walls/back" unique_id=1317360196]
 transform = Transform3D(-8.7422757e-07, -19.999998, 1.3113416e-06, 7.642741e-14, 8.742278e-07, 29.999998, -19.999998, 8.7422757e-07, -1.5584223e-13, 0.30289534, -1.0677606e-07, -1.427902)
 mesh = SubResource("ArrayMesh_f53l5")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="room/Walls/17" unique_id=368401380]
+[node name="StaticBody3D" type="StaticBody3D" parent="room/Walls/back/17" unique_id=232081542]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="room/Walls/17/StaticBody3D" unique_id=298647690]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="room/Walls/back/17/StaticBody3D" unique_id=1449768226]
 shape = SubResource("ConvexPolygonShape3D_4gmqv")
 
-[node name="CollisionShape3D2" type="CollisionShape3D" parent="room/Walls/17/StaticBody3D" unique_id=1841814752]
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="room/Walls/back/17/StaticBody3D" unique_id=1237542408]
 shape = SubResource("ConvexPolygonShape3D_lvfov")
 
-[node name="CollisionShape3D3" type="CollisionShape3D" parent="room/Walls/17/StaticBody3D" unique_id=1416105321]
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="room/Walls/back/17/StaticBody3D" unique_id=1117496064]
 shape = SubResource("ConvexPolygonShape3D_n8a4w")
 
-[node name="CollisionShape3D4" type="CollisionShape3D" parent="room/Walls/17/StaticBody3D" unique_id=1646450944]
+[node name="CollisionShape3D4" type="CollisionShape3D" parent="room/Walls/back/17/StaticBody3D" unique_id=417431690]
 shape = SubResource("ConvexPolygonShape3D_4y8gq")
 
-[node name="CollisionShape3D5" type="CollisionShape3D" parent="room/Walls/17/StaticBody3D" unique_id=617441749]
+[node name="CollisionShape3D5" type="CollisionShape3D" parent="room/Walls/back/17/StaticBody3D" unique_id=1405945974]
 shape = SubResource("ConvexPolygonShape3D_ccyy5")
 
-[node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/17/StaticBody3D" unique_id=677699863]
+[node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/back/17/StaticBody3D" unique_id=982287384]
 shape = SubResource("ConvexPolygonShape3D_ftd1r")
 
-[node name="18" type="MeshInstance3D" parent="room/Walls" unique_id=1817110777]
+[node name="18" type="MeshInstance3D" parent="room/Walls/back" unique_id=1996439745]
 transform = Transform3D(-8.7422757e-07, -19.999998, 1.3113416e-06, 7.642741e-14, 8.742278e-07, 29.999998, -19.999998, 8.7422757e-07, -1.5584223e-13, 0.30289525, -1.0677606e-07, -0.6459931)
 mesh = SubResource("ArrayMesh_f53l5")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="room/Walls/18" unique_id=796027810]
+[node name="StaticBody3D" type="StaticBody3D" parent="room/Walls/back/18" unique_id=921508308]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="room/Walls/18/StaticBody3D" unique_id=1116791125]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="room/Walls/back/18/StaticBody3D" unique_id=1700599677]
 shape = SubResource("ConvexPolygonShape3D_u1sxq")
 
-[node name="CollisionShape3D2" type="CollisionShape3D" parent="room/Walls/18/StaticBody3D" unique_id=2049645966]
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="room/Walls/back/18/StaticBody3D" unique_id=1899354200]
 shape = SubResource("ConvexPolygonShape3D_6876g")
 
-[node name="CollisionShape3D3" type="CollisionShape3D" parent="room/Walls/18/StaticBody3D" unique_id=711748584]
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="room/Walls/back/18/StaticBody3D" unique_id=1148934262]
 shape = SubResource("ConvexPolygonShape3D_0mhyi")
 
-[node name="CollisionShape3D4" type="CollisionShape3D" parent="room/Walls/18/StaticBody3D" unique_id=1678155308]
+[node name="CollisionShape3D4" type="CollisionShape3D" parent="room/Walls/back/18/StaticBody3D" unique_id=1775941238]
 shape = SubResource("ConvexPolygonShape3D_t6140")
 
-[node name="CollisionShape3D5" type="CollisionShape3D" parent="room/Walls/18/StaticBody3D" unique_id=1095289273]
+[node name="CollisionShape3D5" type="CollisionShape3D" parent="room/Walls/back/18/StaticBody3D" unique_id=150562284]
 shape = SubResource("ConvexPolygonShape3D_r1o7m")
 
-[node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/18/StaticBody3D" unique_id=660669767]
+[node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/back/18/StaticBody3D" unique_id=403610504]
 shape = SubResource("ConvexPolygonShape3D_qwd5a")
 
-[node name="19" type="MeshInstance3D" parent="room/Walls" unique_id=1229831949]
+[node name="19" type="MeshInstance3D" parent="room/Walls/back" unique_id=843379902]
 transform = Transform3D(-9.159929e-07, -20, 1.3113415e-06, 8.007864e-14, 8.742278e-07, 30, -20.955471, 8.742279e-07, 1.63902e-13, 0.3028952, -1.0677606e-07, 0.16734707)
 mesh = SubResource("ArrayMesh_f53l5")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="room/Walls/19" unique_id=1974972487]
+[node name="StaticBody3D" type="StaticBody3D" parent="room/Walls/back/19" unique_id=1224480436]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="room/Walls/19/StaticBody3D" unique_id=718279520]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="room/Walls/back/19/StaticBody3D" unique_id=368497310]
 shape = SubResource("ConvexPolygonShape3D_oha6b")
 
-[node name="CollisionShape3D2" type="CollisionShape3D" parent="room/Walls/19/StaticBody3D" unique_id=845430223]
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="room/Walls/back/19/StaticBody3D" unique_id=582544389]
 shape = SubResource("ConvexPolygonShape3D_c4o50")
 
-[node name="CollisionShape3D3" type="CollisionShape3D" parent="room/Walls/19/StaticBody3D" unique_id=772374291]
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="room/Walls/back/19/StaticBody3D" unique_id=1930406124]
 shape = SubResource("ConvexPolygonShape3D_k4yf2")
 
-[node name="CollisionShape3D4" type="CollisionShape3D" parent="room/Walls/19/StaticBody3D" unique_id=965679631]
+[node name="CollisionShape3D4" type="CollisionShape3D" parent="room/Walls/back/19/StaticBody3D" unique_id=1647512545]
 shape = SubResource("ConvexPolygonShape3D_sk215")
 
-[node name="CollisionShape3D5" type="CollisionShape3D" parent="room/Walls/19/StaticBody3D" unique_id=920982547]
+[node name="CollisionShape3D5" type="CollisionShape3D" parent="room/Walls/back/19/StaticBody3D" unique_id=553446109]
 shape = SubResource("ConvexPolygonShape3D_2j13e")
 
-[node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/19/StaticBody3D" unique_id=319861815]
+[node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/back/19/StaticBody3D" unique_id=1513892547]
 shape = SubResource("ConvexPolygonShape3D_keg2w")
 
-[node name="20" type="MeshInstance3D" parent="room/Walls" unique_id=669680156]
+[node name="20" type="MeshInstance3D" parent="room/Walls/back" unique_id=1625354732]
 transform = Transform3D(-8.7422757e-07, -19.999998, 1.3113416e-06, 7.642741e-14, 8.742278e-07, 29.999998, -19.999998, 8.7422757e-07, -1.5584223e-13, 0.30289555, -1.0677606e-07, -3.831831)
 mesh = SubResource("ArrayMesh_f53l5")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="room/Walls/20" unique_id=196624578]
+[node name="StaticBody3D" type="StaticBody3D" parent="room/Walls/back/20" unique_id=1672880327]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="room/Walls/20/StaticBody3D" unique_id=1409720137]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="room/Walls/back/20/StaticBody3D" unique_id=2062416486]
 shape = SubResource("ConvexPolygonShape3D_02waw")
 
-[node name="CollisionShape3D2" type="CollisionShape3D" parent="room/Walls/20/StaticBody3D" unique_id=1327595918]
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="room/Walls/back/20/StaticBody3D" unique_id=460155034]
 shape = SubResource("ConvexPolygonShape3D_75ygb")
 
-[node name="CollisionShape3D3" type="CollisionShape3D" parent="room/Walls/20/StaticBody3D" unique_id=379649179]
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="room/Walls/back/20/StaticBody3D" unique_id=29276588]
 shape = SubResource("ConvexPolygonShape3D_5px1r")
 
-[node name="CollisionShape3D4" type="CollisionShape3D" parent="room/Walls/20/StaticBody3D" unique_id=947445562]
+[node name="CollisionShape3D4" type="CollisionShape3D" parent="room/Walls/back/20/StaticBody3D" unique_id=1459788849]
 shape = SubResource("ConvexPolygonShape3D_d7t2i")
 
-[node name="CollisionShape3D5" type="CollisionShape3D" parent="room/Walls/20/StaticBody3D" unique_id=697010867]
+[node name="CollisionShape3D5" type="CollisionShape3D" parent="room/Walls/back/20/StaticBody3D" unique_id=1743732364]
 shape = SubResource("ConvexPolygonShape3D_dnsyy")
 
-[node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/20/StaticBody3D" unique_id=841468598]
+[node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/back/20/StaticBody3D" unique_id=1263330155]
 shape = SubResource("ConvexPolygonShape3D_esg7q")
 
-[node name="21" type="MeshInstance3D" parent="room/Walls" unique_id=417812170]
+[node name="21" type="MeshInstance3D" parent="room/Walls/back" unique_id=331651841]
 transform = Transform3D(-8.7422757e-07, -19.999998, 1.3113416e-06, 7.642741e-14, 8.742278e-07, 29.999998, -19.999998, 8.7422757e-07, -1.5584223e-13, 0.3028955, -1.0677606e-07, -3.049922)
 mesh = SubResource("ArrayMesh_f53l5")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="room/Walls/21" unique_id=2098673992]
+[node name="StaticBody3D" type="StaticBody3D" parent="room/Walls/back/21" unique_id=1269242258]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="room/Walls/21/StaticBody3D" unique_id=1751509296]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="room/Walls/back/21/StaticBody3D" unique_id=232956283]
 shape = SubResource("ConvexPolygonShape3D_eux4f")
 
-[node name="CollisionShape3D2" type="CollisionShape3D" parent="room/Walls/21/StaticBody3D" unique_id=700860875]
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="room/Walls/back/21/StaticBody3D" unique_id=34356723]
 shape = SubResource("ConvexPolygonShape3D_lnbxs")
 
-[node name="CollisionShape3D3" type="CollisionShape3D" parent="room/Walls/21/StaticBody3D" unique_id=575362795]
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="room/Walls/back/21/StaticBody3D" unique_id=1348799012]
 shape = SubResource("ConvexPolygonShape3D_ujk5y")
 
-[node name="CollisionShape3D4" type="CollisionShape3D" parent="room/Walls/21/StaticBody3D" unique_id=1306718929]
+[node name="CollisionShape3D4" type="CollisionShape3D" parent="room/Walls/back/21/StaticBody3D" unique_id=1944940012]
 shape = SubResource("ConvexPolygonShape3D_a0nj0")
 
-[node name="CollisionShape3D5" type="CollisionShape3D" parent="room/Walls/21/StaticBody3D" unique_id=918424892]
+[node name="CollisionShape3D5" type="CollisionShape3D" parent="room/Walls/back/21/StaticBody3D" unique_id=1735530557]
 shape = SubResource("ConvexPolygonShape3D_brn7n")
 
-[node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/21/StaticBody3D" unique_id=2122824344]
+[node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/back/21/StaticBody3D" unique_id=1803487134]
 shape = SubResource("ConvexPolygonShape3D_ac7vr")
 
-[node name="22" type="MeshInstance3D" parent="room/Walls" unique_id=1340915589]
+[node name="22" type="MeshInstance3D" parent="room/Walls/back" unique_id=1837970164]
 transform = Transform3D(-9.159929e-07, -20, 1.3113415e-06, 8.007864e-14, 8.742278e-07, 30, -20.955471, 8.742279e-07, 1.63902e-13, 0.3028954, -1.0677606e-07, -2.2365818)
 mesh = SubResource("ArrayMesh_f53l5")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="room/Walls/22" unique_id=352451198]
+[node name="StaticBody3D" type="StaticBody3D" parent="room/Walls/back/22" unique_id=1689177007]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="room/Walls/22/StaticBody3D" unique_id=504847742]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="room/Walls/back/22/StaticBody3D" unique_id=1499271650]
 shape = SubResource("ConvexPolygonShape3D_jrrxa")
 
-[node name="CollisionShape3D2" type="CollisionShape3D" parent="room/Walls/22/StaticBody3D" unique_id=580751469]
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="room/Walls/back/22/StaticBody3D" unique_id=1544472366]
 shape = SubResource("ConvexPolygonShape3D_22aes")
 
-[node name="CollisionShape3D3" type="CollisionShape3D" parent="room/Walls/22/StaticBody3D" unique_id=2018694760]
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="room/Walls/back/22/StaticBody3D" unique_id=338355327]
 shape = SubResource("ConvexPolygonShape3D_ap1ga")
 
-[node name="CollisionShape3D4" type="CollisionShape3D" parent="room/Walls/22/StaticBody3D" unique_id=1020809627]
+[node name="CollisionShape3D4" type="CollisionShape3D" parent="room/Walls/back/22/StaticBody3D" unique_id=921244813]
 shape = SubResource("ConvexPolygonShape3D_m0oam")
 
-[node name="CollisionShape3D5" type="CollisionShape3D" parent="room/Walls/22/StaticBody3D" unique_id=1060437053]
+[node name="CollisionShape3D5" type="CollisionShape3D" parent="room/Walls/back/22/StaticBody3D" unique_id=2067250939]
 shape = SubResource("ConvexPolygonShape3D_1m70b")
 
-[node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/22/StaticBody3D" unique_id=815298629]
+[node name="CollisionShape3D6" type="CollisionShape3D" parent="room/Walls/back/22/StaticBody3D" unique_id=676011279]
 shape = SubResource("ConvexPolygonShape3D_gpr2j")
 
 [node name="roof" type="Node3D" parent="room" unique_id=566977723]
@@ -4721,9 +4724,9 @@ shape = SubResource("BoxShape3D_spk2")
 
 [node name="m1" type="SpotLight3D" parent="lighting" unique_id=636374042]
 transform = Transform3D(0.73838496, -0.05502964, 0.6721305, -0.29915023, 0.8665118, 0.3995828, -0.604398, -0.49611393, 0.6233571, 2.6184516, 1.2999984, 0.27757323)
-light_color = Color(1, 0.105, 0.025, 1)
-light_energy = 2.6
-light_volumetric_fog_energy = 0.9
+light_color = Color(0.6431373, 0.22352941, 0.41960785, 1)
+light_energy = 8.778
+light_volumetric_fog_energy = 0.0
 light_bake_mode = 1
 distance_fade_enabled = true
 spot_range = 1.861
@@ -4733,9 +4736,9 @@ spot_angle_attenuation = 0.84089524
 
 [node name="m2" type="SpotLight3D" parent="lighting" unique_id=122876919]
 transform = Transform3D(-0.5119965, -0.49913585, 0.6990872, -0.2991502, 0.8665118, 0.39958292, -0.8052134, -0.004547, -0.5929676, 2.6184516, 1.1560798, -3.8768055)
-light_color = Color(1, 0.105, 0.025, 1)
-light_energy = 2.6
-light_volumetric_fog_energy = 0.9
+light_color = Color(0.6431373, 0.22352941, 0.41960785, 1)
+light_energy = 8.778
+light_volumetric_fog_energy = 0.0
 light_bake_mode = 1
 distance_fade_enabled = true
 spot_range = 1.861
@@ -4743,11 +4746,24 @@ spot_attenuation = -0.98
 spot_angle = 63.38
 spot_angle_attenuation = 0.84089524
 
+[node name="m5" type="SpotLight3D" parent="lighting" unique_id=1749459769]
+transform = Transform3D(-0.040795326, -0.42999077, 0.90191114, -0.29915023, 0.8665118, 0.3995828, -0.9533336, -0.2535058, -0.16398147, 2.6184516, 1.1560798, -1.8768055)
+light_color = Color(0.6431373, 0.22352941, 0.41960785, 1)
+light_energy = 6.583
+light_volumetric_fog_energy = 0.0
+light_bake_mode = 1
+distance_fade_enabled = true
+spot_range = 1.696
+spot_attenuation = -1.57
+spot_angle = 99.45
+spot_angle_attenuation = 1.1095678
+
 [node name="m3" type="SpotLight3D" parent="lighting" unique_id=2036477922]
 transform = Transform3D(-0.645262, 0.124793775, -0.75369984, -0.29915023, 0.8665118, 0.3995829, 0.70295525, 0.48330513, -0.5217951, 0.3848195, 1.1958917, -3.8768055)
-light_color = Color(0.34, 0.08, 1, 1)
-light_energy = 2.4
-light_volumetric_fog_energy = 0.9
+light_color = Color(0.6444076, 0.5062129, 0, 1)
+light_energy = 5.093
+light_indirect_energy = 1.19
+light_volumetric_fog_energy = 2.801
 light_bake_mode = 1
 distance_fade_enabled = true
 spot_range = 1.861
@@ -4757,9 +4773,10 @@ spot_angle_attenuation = 0.84089524
 
 [node name="m4" type="SpotLight3D" parent="lighting" unique_id=42625722]
 transform = Transform3D(0.52755064, 0.49912998, -0.6874296, -0.29915026, 0.86651176, 0.39958283, 0.7951098, -0.0051554292, 0.6064437, 0.3848195, 1.1958917, 0.19723368)
-light_color = Color(0.34, 0.08, 1, 1)
-light_energy = 2.4
-light_volumetric_fog_energy = 0.9
+light_color = Color(0.6444076, 0.5062129, 0, 1)
+light_energy = 5.093
+light_indirect_energy = 1.19
+light_volumetric_fog_energy = 2.801
 light_bake_mode = 1
 distance_fade_enabled = true
 spot_range = 1.861
@@ -4768,79 +4785,92 @@ spot_angle = 63.38
 spot_angle_attenuation = 0.84089524
 
 [node name="area" type="AreaLight3D" parent="lighting" unique_id=181872741]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 1.3428673, 1.1736196, -1.8672531)
-light_color = Color(0.72, 0.78, 0.92, 1)
-light_energy = 1.8
-light_volumetric_fog_energy = 0.0
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 1.3428673, 0.8611389, -1.8672531)
+light_color = Color(0.4117647, 0.22745098, 0.6509804, 1)
+light_energy = 16.0
+light_volumetric_fog_energy = 16.0
+light_size = 1.08
+light_bake_mode = 1
+shadow_normal_bias = 10.0
+shadow_reverse_cull_face = true
+shadow_blur = 4.465
+area_range = 1.046
 area_size = Vector2(1, 4.0110393)
 
 [node name="spot2" type="SpotLight3D" parent="lighting" unique_id=2089318168]
 transform = Transform3D(1, 0, 0, 0, 1.1920929e-07, 1, 0, -1, 1.1920929e-07, 1.4725765, 1.174567, -1.760955)
-light_color = Color(0.04, 0.8, 1, 1)
-light_energy = 0.8
-light_indirect_energy = 1.0
-light_volumetric_fog_energy = 2.0
-light_size = 3.21
-light_specular = 0.342
-shadow_enabled = true
+light_color = Color(0.4117647, 0.22745098, 0.6509804, 1)
+light_energy = 2.295
+light_indirect_energy = 16.0
+light_volumetric_fog_energy = 4.923
+light_size = 5.365
+light_specular = 6.712
+light_bake_mode = 1
 spot_range = 2.921
 spot_angle = 67.64237
 spot_angle_attenuation = 0.5946036
 
 [node name="blob3D" type="OmniLight3D" parent="lighting" unique_id=1507702852]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.620065, 0.9630251, -0.34319198)
-light_color = Color(0.02, 0.55, 1, 1)
+light_color = Color(0.9843137, 0.41568628, 0.9843137, 1)
 light_energy = 5.0
 light_indirect_energy = 2.0
 light_volumetric_fog_energy = 3.0
+light_size = 1.0
 omni_range = 0.10119083
 
 [node name="blob3D2" type="OmniLight3D" parent="lighting" unique_id=1810159085]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.620065, 0.9630251, -0.9079793)
-light_color = Color(0.02, 0.55, 1, 1)
+light_color = Color(0.9843137, 0.41568628, 0.9843137, 1)
 light_energy = 5.0
 light_indirect_energy = 2.0
 light_volumetric_fog_energy = 3.0
+light_size = 1.0
 omni_range = 0.10119083
 
 [node name="blob3D3" type="OmniLight3D" parent="lighting" unique_id=1632013087]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.620065, 0.9630251, -1.3652952)
-light_color = Color(0.02, 0.55, 1, 1)
+light_color = Color(0.9843137, 0.41568628, 0.9843137, 1)
 light_energy = 5.0
 light_indirect_energy = 2.0
 light_volumetric_fog_energy = 3.0
+light_size = 1.0
 omni_range = 0.10119083
 
 [node name="blob3D4" type="OmniLight3D" parent="lighting" unique_id=399083172]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.620065, 0.9630251, -1.9388471)
-light_color = Color(0.02, 0.55, 1, 1)
+light_color = Color(0.9843137, 0.41568628, 0.9843137, 1)
 light_energy = 5.0
 light_indirect_energy = 2.0
 light_volumetric_fog_energy = 3.0
+light_size = 1.0
 omni_range = 0.10119083
 
 [node name="blob3D5" type="OmniLight3D" parent="lighting" unique_id=1906849751]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.620065, 0.9630251, -2.4616997)
-light_color = Color(0.02, 0.55, 1, 1)
+light_color = Color(0.9843137, 0.41568628, 0.9843137, 1)
 light_energy = 5.0
 light_indirect_energy = 2.0
 light_volumetric_fog_energy = 3.0
+light_size = 1.0
 omni_range = 0.10119083
 
 [node name="blob3D6" type="OmniLight3D" parent="lighting" unique_id=1875814799]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.620065, 0.9630251, -2.939359)
-light_color = Color(0.02, 0.55, 1, 1)
+light_color = Color(0.9843137, 0.41568628, 0.9843137, 1)
 light_energy = 5.0
 light_indirect_energy = 2.0
 light_volumetric_fog_energy = 3.0
+light_size = 1.0
 omni_range = 0.10119083
 
 [node name="blob3D7" type="OmniLight3D" parent="lighting" unique_id=605113704]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.620065, 0.9630251, -3.4486637)
-light_color = Color(0.02, 0.55, 1, 1)
+light_color = Color(0.9843137, 0.41568628, 0.9843137, 1)
 light_energy = 5.0
 light_indirect_energy = 2.0
 light_volumetric_fog_energy = 3.0
+light_size = 1.0
 omni_range = 0.10119083
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1573107313]
@@ -4850,16 +4880,16 @@ environment = SubResource("Environment_8j810")
 transform = Transform3D(0.35, 0, 0, 0, 0.35, 0, 0, 0, 0.35, 1.495841, 0, -3.4246516)
 collision_layer = 2
 collision_mask = 1
-animation_blend_time = 0.01
 controller_device = 0
+animation_blend_time = 0.01
 
 [node name="Player2" parent="." unique_id=1073834013 instance=ExtResource("1_f5nuu")]
 transform = Transform3D(-0.35, 0, -3.059797e-08, 0, 0.35, 0, 3.059797e-08, 0, -0.35, 1.495841, 0, -0.3484847)
 collision_layer = 2
 collision_mask = 1
-player_index = 2
 controller_device = 1
 visual_facing_inverted = true
+player_index = 2
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1786532065]
 transform = Transform3D(0, 0.3397344, -0.9405214, 0, 0.9405214, 0.3397344, 1, 0, 0, 0.34431893, 0.6435843, -1.8905902)
