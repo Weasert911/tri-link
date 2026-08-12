@@ -15,6 +15,7 @@ const STATES := {
 	&"JAB": &"Punch_Jab",
 	&"CROSS": &"Punch_Cross",
 	&"HOOK": &"Melee_Hook",
+	&"OVERHAND": &"OverhandThrow",
 	&"HIT": &"Hit_Knockback",
 	&"HIT_CHEST": &"Hit_Chest",
 	&"HIT_HEAD": &"Hit_Head",
@@ -117,9 +118,9 @@ func animation_name() -> StringName:
 	return playback.get_current_node() if playback != null else &""
 
 func _transition_time(from_state: StringName, to_state: StringName) -> float:
-	if to_state in [&"JAB", &"CROSS", &"HOOK", &"HIT", &"HIT_CHEST", &"HIT_HEAD", &"DEATH", &"ROLL", &"ROLL_BACK"]:
+	if to_state in [&"JAB", &"CROSS", &"HOOK", &"OVERHAND", &"HIT", &"HIT_CHEST", &"HIT_HEAD", &"DEATH", &"ROLL", &"ROLL_BACK"]:
 		return 0.01
-	if from_state in [&"JAB", &"CROSS", &"HOOK", &"HIT", &"HIT_CHEST", &"HIT_HEAD", &"DEATH", &"ROLL", &"ROLL_BACK"]:
+	if from_state in [&"JAB", &"CROSS", &"HOOK", &"OVERHAND", &"HIT", &"HIT_CHEST", &"HIT_HEAD", &"DEATH", &"ROLL", &"ROLL_BACK"]:
 		return 0.04
 	if to_state in [&"JUMP_START", &"JUMP", &"LAND"]:
 		return 0.05

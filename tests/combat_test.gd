@@ -46,6 +46,7 @@ func _initialize() -> void:
 	_check("punch animation exists", _p1.get_node("pack1").has_animation(&"Punch_Jab"))
 	_check("hook animation exists", _p1.get_node("pack2").has_animation(&"Melee_Hook"))
 	_check("cross animation exists", _p1.get_node("pack1").has_animation(&"Punch_Cross"))
+	_check("overhand animation exists", _p1.get_node("pack2").has_animation(&"OverhandThrow"))
 	_check("hit reaction exists", _p2.get_node("pack2").has_animation(&"Hit_Knockback"))
 	_check("initial health", _p2.health == 100)
 	_check("combat debug hidden by default", not _p1.get_node("DebugHitbox").visible and not _p1.get_node("DebugHurtbox").visible)
@@ -181,7 +182,7 @@ func _initialize() -> void:
 	await _settle(50)
 	_check("one punch hits once", _p2.health == 90)
 
-	# Combo state: jab -> jab -> combo hook, then resets when interrupted.
+	# Primary route: jab -> cross -> hook.
 	_p1._end_attack()
 	_p1._combo_step = 0
 	_p1._start_light_attack()
@@ -199,12 +200,27 @@ func _initialize() -> void:
 	_p1._end_attack()
 	_p1._combo_step += 1
 	_p1._start_attack(combo_3)
-	_check("combo hit 3 is hook", _p1.current_attack() == &"combo_hook" and PlayerController.ATTACKS[combo_3]["knockback"] == 8.0)
+	_check("combo hit 3 is hook", _p1.current_attack() == &"hook" and PlayerController.ATTACKS[combo_3]["knockback"] == 6.0)
 	_check("cross has distinct combat values", PlayerController.ATTACKS[&"cross"]["damage"] == 12 and PlayerController.ATTACKS[&"cross"]["knockback"] == 5.5)
+	_check("overhand has authored heavy values", PlayerController.ATTACKS[&"overhand"]["damage"] == 20 and PlayerController.ATTACKS[&"overhand"]["knockback"] == 9.0)
 	_p1._end_attack()
+	_p1._combo_step = 1
 	_p1._start_attack(&"jab")
 	_p1._queue_combo_attack(true)
-	_check("jab heavy branch queues hook", _p1._queued_attack == &"hook")
+	_check("jab heavy branch queues second jab", _p1._queued_attack == &"jab")
+	_p1._queued_attack = &""
+	_p1._combo_step = 2
+	_p1._queue_combo_attack(false)
+	_check("second jab branch queues combo hook", _p1._queued_attack == &"combo_hook")
+	_check("combo hook remains major finisher", PlayerController.ATTACKS[_p1._queued_attack]["knockback"] == 8.0)
+	_p1._queued_attack = &""
+	_p1._end_attack()
+	_p1._start_attack(&"cross")
+	_p1._queue_combo_attack(false)
+	_check("cross light branch queues hook", _p1._queued_attack == &"hook")
+	_p1._queued_attack = &""
+	_p1._queue_combo_attack(true)
+	_check("cross heavy branch queues overhand", _p1._queued_attack == &"overhand")
 	_p1.take_hit(_p2, 1, 0.0)
 	_check("hit interrupts attack", _p1.current_attack() == &"" and _p1.combo_step() == 0)
 
@@ -214,6 +230,15 @@ func _initialize() -> void:
 	_check("buffered input accelerates attack", is_equal_approx(_p1.animation_speed_scale(), _p1.buffered_attack_speed))
 	_p1._end_attack()
 	_check("attack speed resets after recovery", is_equal_approx(_p1.animation_speed_scale(), 1.0))
+	_check("all attacks expose timing and cancel metadata", _all_attacks_have_required_metadata())
+
+	_p1._start_attack(&"jab")
+	_p1._attack_connected = false
+	_p1._attack_elapsed = PlayerController.ATTACKS[&"jab"]["cancel_start"]
+	_p1._input_buffer_timer = _p1.input_buffer_window
+	_p1._process_attack(0.0)
+	_check("cancel requires a confirmed hit", _p1.current_attack() == &"jab")
+	_p1._end_attack()
 
 	_p1.current_color = RED
 	_p2.current_color = RED
@@ -223,7 +248,36 @@ func _initialize() -> void:
 	_p1._resolve_attack_overlap(_p2, PlayerController.ATTACKS[&"cross"], _p2.global_position)
 	_check("critical cross scales damage", _p2.health == 82)
 	_check("critical uses head reaction", _p2.animation_state() == &"HIT_HEAD")
+	_p1._end_attack()
+	_p2._end_attack()
+	_p2._start_attack(&"cross")
+	_p2._attack_phase = PlayerController.AttackPhase.RECOVERY
+	_p2.health = 100
+	_p1._start_attack(&"jab")
+	_p1.set_attack_critical_for_test(false)
+	_p1._resolve_attack_overlap(_p2, PlayerController.ATTACKS[&"jab"], _p2.global_position)
+	_check("recovery counter deterministically criticals", _p2.health == 85 and _p2.animation_state() == &"HIT_HEAD")
+
+	_p1.apply_hit_stop(0.04)
+	_check("hitstop enters without clearing velocity", _p1.is_in_hit_stop())
+	await _settle(8)
+	_check("hitstop exits cleanly", not _p1.is_in_hit_stop())
 
 	_finished = true
 	print("RESULT: %d checks, %d failures" % [_checks, _failures])
 	quit(1 if _failures > 0 else 0)
+
+func _all_attacks_have_required_metadata() -> bool:
+	var required := [
+		"animation", "damage", "knockback", "startup", "active", "recovery",
+		"range", "hitbox_offset", "hitbox_size", "reaction", "light_followup",
+		"heavy_followup", "can_cancel", "can_critical", "launch", "wall_bounce",
+		"special_impact", "cancel_start", "cancel_end",
+	]
+	for definition in PlayerController.ATTACKS.values():
+		for field in required:
+			if not definition.has(field):
+				return false
+		if float(definition["startup"]) <= 0.0 or float(definition["active"]) <= 0.0 or float(definition["recovery"]) < 0.0:
+			return false
+	return true

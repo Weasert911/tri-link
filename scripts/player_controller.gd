@@ -13,6 +13,13 @@ enum LocomotionState {
 	LANDING,
 }
 
+enum AttackPhase {
+	IDLE,
+	STARTUP,
+	ACTIVE,
+	RECOVERY,
+}
+
 ## The player's RGB state. Same color as the opponent means solid
 ## (player-vs-player collision active); different colors phase through.
 enum PlayerColor {
@@ -27,11 +34,15 @@ enum PlayerColor {
 signal died
 signal color_changed(color: PlayerColor)
 signal hit_confirmed(attacker: PlayerController, victim: PlayerController, position: Vector3, heavy: bool)
-signal wall_hit(position: Vector3, heavy: bool)
-signal spike_ko(position: Vector3)
+signal wall_hit(position: Vector3, heavy: bool, victim: PlayerController)
+signal spike_ko(position: Vector3, victim: PlayerController)
 signal phase_missed(attacker: PlayerController, target: PlayerController, position: Vector3)
 signal critical_hit(attacker: PlayerController, victim: PlayerController, position: Vector3, heavy: bool)
 signal attack_active(attacker: PlayerController, position: Vector3, heavy: bool, critical: bool)
+signal combo_started(count: int)
+signal combo_extended(count: int)
+signal combo_finished
+signal counter_hit(attacker: PlayerController, victim: PlayerController, position: Vector3)
 
 const MAX_HEALTH := 100
 const HITSTUN_DURATION := 0.25
@@ -43,6 +54,10 @@ const HITSTUN_DURATION := 0.25
 ##   active    - hitbox active window
 ##   recovery  - after the active window, before control returns
 ##   player    - 1 = pack1 (locomotion/attacks), 2 = pack2 (combat)
+## Optional per-attack fields (read with Dictionary.get()):
+##   label, weight, reaction, launch, wall_bounce, can_cancel,
+##   critical_window, critical_damage_mult, critical_knockback_mult,
+##   trail_scale
 const ATTACKS := {
 	&"jab": {
 		"animation": &"Punch_Jab",
@@ -57,7 +72,21 @@ const ATTACKS := {
 		"hitbox_size": Vector3(1.9, 1.8, 0.38),
 		"hitstun": HITSTUN_DURATION,
 		"light_followup": &"cross",
-		"heavy_followup": &"hook",
+		"heavy_followup": &"jab",
+		"label": &"JAB",
+		"weight": &"light",
+		"reaction": &"chest",
+		"launch": 0.0,
+		"wall_bounce": false,
+		"can_cancel": true,
+		"cancel_start": 0.38,
+		"cancel_end": 0.70,
+		"can_critical": true,
+		"special_impact": false,
+		"critical_window": 0.22,
+		"critical_damage_mult": 1.5,
+		"critical_knockback_mult": 1.35,
+		"trail_scale": 0.6,
 	},
 	&"cross": {
 		"animation": &"Punch_Cross",
@@ -71,8 +100,22 @@ const ATTACKS := {
 		"hitbox_offset": Vector3(0.0, 0.94, 0.48),
 		"hitbox_size": Vector3(2.15, 1.9, 0.43),
 		"hitstun": HITSTUN_DURATION,
-		"light_followup": &"combo_hook",
-		"heavy_followup": &"hook",
+		"light_followup": &"hook",
+		"heavy_followup": &"overhand",
+		"label": &"CROSS",
+		"weight": &"light",
+		"reaction": &"chest",
+		"launch": 0.0,
+		"wall_bounce": true,
+		"can_cancel": true,
+		"cancel_start": 0.38,
+		"cancel_end": 0.66,
+		"can_critical": true,
+		"special_impact": false,
+		"critical_window": 0.2,
+		"critical_damage_mult": 1.5,
+		"critical_knockback_mult": 1.35,
+		"trail_scale": 0.9,
 	},
 	&"hook": {
 		"animation": &"Melee_Hook",
@@ -88,6 +131,20 @@ const ATTACKS := {
 		"hitstun": HITSTUN_DURATION,
 		"light_followup": &"",
 		"heavy_followup": &"",
+		"label": &"HOOK",
+		"weight": &"heavy",
+		"reaction": &"knockback",
+		"launch": 0.0,
+		"wall_bounce": true,
+		"can_cancel": false,
+		"cancel_start": 0.32,
+		"cancel_end": 0.32,
+		"can_critical": true,
+		"special_impact": true,
+		"critical_window": 0.18,
+		"critical_damage_mult": 1.5,
+		"critical_knockback_mult": 1.35,
+		"trail_scale": 1.2,
 	},
 	&"combo_hook": {
 		"animation": &"Melee_Hook",
@@ -103,6 +160,49 @@ const ATTACKS := {
 		"hitstun": HITSTUN_DURATION,
 		"light_followup": &"",
 		"heavy_followup": &"",
+		"label": &"COMBO HOOK",
+		"weight": &"heavy",
+		"reaction": &"knockback",
+		"launch": 0.0,
+		"wall_bounce": true,
+		"can_cancel": false,
+		"cancel_start": 0.38,
+		"cancel_end": 0.38,
+		"can_critical": true,
+		"special_impact": true,
+		"critical_window": 0.18,
+		"critical_damage_mult": 1.5,
+		"critical_knockback_mult": 1.35,
+		"trail_scale": 1.6,
+	},
+	&"overhand": {
+		"animation": &"OverhandThrow",
+		"player": 2,
+		"startup": 0.26,
+		"active": 0.14,
+		"recovery": 0.5,
+		"damage": 20,
+		"knockback": 9.0,
+		"range": 0.54,
+		"hitbox_offset": Vector3(0.0, 1.05, 0.6),
+		"hitbox_size": Vector3(2.9, 2.3, 0.6),
+		"hitstun": HITSTUN_DURATION,
+		"light_followup": &"",
+		"heavy_followup": &"",
+		"label": &"OVERHAND",
+		"weight": &"heavy",
+		"reaction": &"knockback",
+		"launch": 0.0,
+		"wall_bounce": true,
+		"can_cancel": false,
+		"cancel_start": 0.40,
+		"cancel_end": 0.40,
+		"can_critical": true,
+		"special_impact": true,
+		"critical_window": 0.2,
+		"critical_damage_mult": 1.5,
+		"critical_knockback_mult": 1.35,
+		"trail_scale": 1.8,
 	},
 }
 
@@ -138,6 +238,11 @@ const ATTACKS := {
 ## Animation crossfade time for transitions.
 @export var animation_blend_time: float = 0.12
 @export_range(1.0, 4.0) var buffered_attack_speed: float = 2.0
+@export_range(0.05, 0.4) var input_buffer_window: float = 0.15
+@export_range(0.0, 1.5) var combo_refresh_time: float = 0.5
+@export var wall_bounce_strength: float = 0.35
+@export var wall_bounce_min_knockback: float = 5.5
+@export_range(0.0, 0.5) var wall_bounce_hitstun: float = 0.12
 @export_range(0.1, 1.0) var roll_duration: float = 0.55
 @export_range(0.1, 2.0) var roll_speed: float = 1.15
 @export_range(0.1, 1.0) var roll_diagonal_threshold: float = 0.45
@@ -219,10 +324,13 @@ var _attack_action: StringName = &"light_attack"
 var _heavy_action: StringName = &"heavy_attack"
 var _roll_action: StringName = &"roll"
 var _current_attack: StringName = &""
+var _attack_phase: AttackPhase = AttackPhase.IDLE
 var _attack_elapsed := -1.0
 var _attack_hit_targets: Dictionary = {}
 var _attack_color: PlayerColor = PlayerColor.RED
 var _attack_critical := false
+var _attack_connected := false
+var _critical_was_counter := false
 var _combo_hits := 0
 var _active_feedback_emitted := false
 var _hitstun_timer := 0.0
@@ -230,9 +338,12 @@ var _hit_stop_timer := 0.0
 var _combo_step := 0
 var _combo_timer := 0.0
 var _queued_attack: StringName = &""
+var _input_buffer_timer := 0.0
+var _buffer_heavy := false
 var _attack_time_scale := 1.0
 var _wall_hit_reported := false
 var _last_knockback := 0.0
+var _wall_bounce_allowed := false
 var _debug_hitbox_mesh: MeshInstance3D
 var _debug_hurtbox_mesh: MeshInstance3D
 var _debug_label: Label3D
@@ -338,8 +449,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_combo_timer = maxf(_combo_timer - delta, 0.0)
 	if _combo_timer <= 0.0 and _current_attack == &"":
-		_combo_step = 0
-		_queued_attack = &""
+		_reset_combo()
 	_process_color_input(delta)
 	_process_attack(delta)
 	_process_roll_input()
@@ -390,9 +500,7 @@ func _process_attack(delta: float) -> void:
 		if _is_action_just_pressed(_attack_action, JOY_BUTTON_X) and can_attack and not is_color_switching():
 			_start_light_attack()
 		elif _is_action_just_pressed(_heavy_action, JOY_BUTTON_Y) and can_attack and not is_color_switching():
-			_combo_step = 0
-			_combo_timer = 0.0
-			_queued_attack = &""
+			_reset_combo()
 			_start_attack(&"hook")
 		return
 	_attack_elapsed += delta * _attack_time_scale
@@ -402,8 +510,15 @@ func _process_attack(delta: float) -> void:
 	var recovery: float = def["recovery"]
 	var reach: float = def["range"]
 	var active := _attack_elapsed >= startup and _attack_elapsed < startup + active_time
+	if _attack_elapsed < startup:
+		_attack_phase = AttackPhase.STARTUP
+	elif active:
+		_attack_phase = AttackPhase.ACTIVE
+	else:
+		_attack_phase = AttackPhase.RECOVERY
 	var ideal_time := startup + active_time * 0.5
-	_attack_critical = active and absf(_attack_elapsed - ideal_time) <= active_time * 0.22
+	var critical_window := float(def.get("critical_window", 0.22))
+	_attack_critical = bool(def.get("can_critical", true)) and active and absf(_attack_elapsed - ideal_time) <= active_time * critical_window
 	var hitbox_target := global_position + get_facing_direction() * reach
 	_configure_attack_hitbox(def, hitbox_target)
 	_attack_hitbox.monitoring = active
@@ -417,23 +532,34 @@ func _process_attack(delta: float) -> void:
 			if target != null and target != self:
 				_resolve_attack_overlap(target, def, hitbox_target)
 	var total_duration: float = startup + active_time + recovery
+	var can_cancel := bool(def.get("can_cancel", true)) and _attack_connected
+	var cancel_start := float(def.get("cancel_start", startup + active_time))
+	var cancel_end := float(def.get("cancel_end", total_duration))
 	var buffered_input := _is_action_just_pressed(_attack_action, JOY_BUTTON_X) or _is_action_just_pressed(_heavy_action, JOY_BUTTON_Y)
 	if buffered_input and can_attack:
-		if _is_action_just_pressed(_attack_action, JOY_BUTTON_X) and _attack_elapsed >= startup + active_time:
-			_queue_combo_attack(false)
-		elif _is_action_just_pressed(_heavy_action, JOY_BUTTON_Y) and _attack_elapsed >= startup + active_time:
-			_queue_combo_attack(true)
+		_input_buffer_timer = input_buffer_window
+		_buffer_heavy = _is_action_just_pressed(_heavy_action, JOY_BUTTON_Y)
 		_accelerate_current_attack()
+	_input_buffer_timer = maxf(_input_buffer_timer - delta, 0.0)
+	if can_cancel and _attack_elapsed >= cancel_start and _attack_elapsed <= cancel_end and _input_buffer_timer > 0.0 and _queued_attack == &"":
+		_input_buffer_timer = 0.0
+		_queue_combo_attack(_buffer_heavy)
+	if can_cancel and _queued_attack != &"" and _attack_elapsed >= cancel_start and _attack_elapsed <= cancel_end:
+		var cancelled_follow_up := _queued_attack
+		_queued_attack = &""
+		_end_attack()
+		_combo_step += 1
+		_start_attack(cancelled_follow_up)
+		return
 	if _attack_elapsed >= total_duration:
 		var follow_up := _queued_attack
 		_queued_attack = &""
 		_end_attack()
 		if follow_up != &"":
 			_combo_step += 1
-			_combo_hits += 1
 			_start_attack(follow_up)
 		else:
-			_combo_timer = 0.36 if _combo_step > 0 else 0.0
+			_combo_timer = combo_refresh_time if _combo_step > 0 else 0.0
 			_update_animation_state()
 
 ## Starts the named attack from the ATTACKS table. Attacks can be triggered
@@ -444,9 +570,12 @@ func _start_attack(attack_id: StringName) -> void:
 	_current_attack = attack_id
 	_attack_color = current_color
 	_attack_elapsed = 0.0
+	_attack_phase = AttackPhase.STARTUP
 	_attack_time_scale = 1.0
 	_attack_hit_targets.clear()
 	_attack_critical = false
+	_attack_connected = false
+	_critical_was_counter = false
 	_active_feedback_emitted = false
 	_attack_hitbox.monitoring = false
 	_animation_system.set_speed_scale(1.0)
@@ -455,6 +584,8 @@ func _start_attack(attack_id: StringName) -> void:
 		attack_state = &"CROSS"
 	elif attack_id in [&"hook", &"combo_hook"]:
 		attack_state = &"HOOK"
+	elif attack_id == &"overhand":
+		attack_state = &"OVERHAND"
 	_animation_system.travel(attack_state, true)
 	_current_animation = ATTACKS[attack_id]["animation"]
 
@@ -464,20 +595,41 @@ func _resolve_attack_overlap(target: PlayerController, definition: Dictionary, h
 	_attack_hit_targets[target] = true
 	if target.current_color != _attack_color:
 		phase_missed.emit(self, target, hit_position)
+		_reset_combo()
 		return
+	var counter := target.is_recovery_vulnerable()
+	_attack_critical = _attack_critical or (bool(definition.get("can_critical", true)) and counter)
+	_critical_was_counter = counter
 	var damage: int = definition["damage"]
 	var knockback: float = definition["knockback"]
-	var reaction := &"chest"
-	if _current_attack in [&"hook", &"combo_hook"]:
-		reaction = &"knockback"
+	var reaction: StringName = definition.get("reaction", &"chest")
 	if _attack_critical:
-		damage = roundi(damage * 1.5)
-		knockback *= 1.35
+		damage = roundi(damage * float(definition.get("critical_damage_mult", 1.5)))
+		knockback *= float(definition.get("critical_knockback_mult", 1.35))
 		reaction = &"head"
-	target.take_hit(self, damage, knockback, reaction)
+	target.take_hit(
+		self,
+		damage,
+		knockback,
+		reaction,
+		float(definition.get("hitstun", HITSTUN_DURATION)),
+		bool(definition.get("wall_bounce", false))
+	)
+	var launch := float(definition.get("launch", 0.0))
+	if launch > 0.0 and target.alive:
+		target.velocity.y = launch
 	hit_confirmed.emit(self, target, hit_position, _current_attack != &"jab")
+	_attack_connected = true
 	if _attack_critical:
 		critical_hit.emit(self, target, hit_position, _current_attack != &"jab")
+	if _critical_was_counter:
+		counter_hit.emit(self, target, hit_position)
+	_combo_hits += 1
+	if _combo_hits == 2:
+		combo_started.emit(_combo_hits)
+	elif _combo_hits > 2:
+		combo_extended.emit(_combo_hits)
+	_combo_timer = combo_refresh_time
 
 func _configure_attack_hitbox(definition: Dictionary, target: Vector3) -> void:
 	var hitbox_offset: Vector3 = definition["hitbox_offset"]
@@ -508,6 +660,10 @@ func _start_light_attack() -> void:
 func _queue_combo_attack(heavy := false) -> void:
 	if _current_attack == &"":
 		return
+	# The second jab is a finite alternate route, never a loop.
+	if _current_attack == &"jab" and _combo_step >= 2:
+		_queued_attack = &"combo_hook"
+		return
 	var key := "heavy_followup" if heavy else "light_followup"
 	_queued_attack = ATTACKS[_current_attack].get(key, &"")
 
@@ -521,10 +677,23 @@ func _end_attack() -> void:
 	if _current_attack != &"":
 		_animation_system.set_speed_scale(1.0)
 	_current_attack = &""
+	_attack_phase = AttackPhase.IDLE
 	_attack_elapsed = -1.0
 	_attack_time_scale = 1.0
 	_attack_hitbox.monitoring = false
+	_input_buffer_timer = 0.0
 	_update_combat_debug(false, {})
+
+func _reset_combo() -> void:
+	var had_combo := _combo_hits > 0 or _combo_step > 0 or _queued_attack != &""
+	_combo_hits = 0
+	_combo_step = 0
+	_combo_timer = 0.0
+	_queued_attack = &""
+	_input_buffer_timer = 0.0
+	_buffer_heavy = false
+	if had_combo:
+		combo_finished.emit()
 
 func _process_roll_input() -> void:
 	if _rolling or _current_attack != &"" or _hitstun_timer > 0.0 or _controls_locked or not is_on_floor():
@@ -604,6 +773,12 @@ func is_in_hit_stop() -> bool:
 func current_attack() -> StringName:
 	return _current_attack
 
+func attack_phase() -> AttackPhase:
+	return _attack_phase
+
+func is_recovery_vulnerable() -> bool:
+	return alive and _current_attack != &"" and _attack_phase == AttackPhase.RECOVERY
+
 func combo_step() -> int:
 	return _combo_step
 
@@ -619,24 +794,24 @@ func animation_position() -> float:
 func queue_combo_for_test() -> void:
 	_queue_combo_attack()
 
-func take_hit(attacker: PlayerController, damage: int, knockback: float, reaction: StringName = &"knockback") -> void:
+func take_hit(attacker: PlayerController, damage: int, knockback: float, reaction: StringName = &"knockback", hitstun := HITSTUN_DURATION, can_wall_bounce := true) -> void:
 	if not alive:
 		return
 	if _rolling:
 		_end_roll()
 	if _current_attack != &"":
 		_end_attack()
-		_combo_step = 0
-		_combo_timer = 0.0
-		_queued_attack = &""
+		_reset_combo()
 	health = max(health - damage, 0)
 	if health <= 0:
 		_die()
 		return
-	_hitstun_timer = HITSTUN_DURATION
+	_reset_combo()
+	_hitstun_timer = hitstun
 	velocity.y = 0.0
 	velocity.z = signf(global_position.z - attacker.global_position.z) * knockback
 	_last_knockback = knockback
+	_wall_bounce_allowed = can_wall_bounce
 	_wall_hit_reported = false
 	_current_animation = &""
 	var reaction_state := &"HIT"
@@ -659,7 +834,7 @@ func take_hazard_damage(amount: int) -> void:
 	health = max(health - amount, 0)
 	if health <= 0:
 		_die()
-		spike_ko.emit(global_position)
+		spike_ko.emit(global_position, self)
 
 func _detect_wall_impact() -> void:
 	if _wall_hit_reported or _hitstun_timer <= 0.0 or _last_knockback <= 0.0:
@@ -668,9 +843,15 @@ func _detect_wall_impact() -> void:
 		var collision := get_slide_collision(i)
 		if absf(collision.get_normal().z) > 0.7:
 			_wall_hit_reported = true
-			wall_hit.emit(collision.get_position(), _last_knockback >= 5.5)
-			velocity.z = 0.0
+			var heavy := _last_knockback >= wall_bounce_min_knockback
+			wall_hit.emit(collision.get_position(), heavy, self)
+			if heavy and _wall_bounce_allowed and _last_knockback > 0.0:
+				velocity.z = collision.get_normal().z * wall_bounce_strength * _last_knockback
+				_hitstun_timer = maxf(_hitstun_timer, wall_bounce_hitstun)
+			else:
+				velocity.z = 0.0
 			_last_knockback = 0.0
+			_wall_bounce_allowed = false
 			return
 
 func _die() -> void:
@@ -683,6 +864,7 @@ func _die() -> void:
 	can_attack = false
 	velocity = Vector3.ZERO
 	_attack_hitbox.monitoring = false
+	_reset_combo()
 	_play_animation(&"Death01")
 	died.emit()
 
@@ -698,14 +880,14 @@ func lock_controls() -> void:
 	if _rolling:
 		_end_roll()
 	_end_attack()
-	_combo_step = 0
-	_combo_timer = 0.0
-	_queued_attack = &""
+	_reset_combo()
 	_rolling = false
 	_roll_timer = 0.0
 	_roll_input_held = false
 	_hitstun_timer = 0.0
 	_hit_stop_timer = 0.0
+	_last_knockback = 0.0
+	_wall_bounce_allowed = false
 	_animation_system.set_paused(false)
 	_animation_system.set_speed_scale(1.0)
 	velocity = Vector3.ZERO
@@ -733,15 +915,17 @@ func reset_round() -> void:
 		color_changed.emit(current_color)
 	velocity = Vector3.ZERO
 	_current_attack = &""
+	_attack_phase = AttackPhase.IDLE
 	_attack_elapsed = -1.0
 	_attack_hitbox.monitoring = false
 	_hitstun_timer = 0.0
-	_combo_step = 0
-	_combo_timer = 0.0
-	_queued_attack = &""
+	_reset_combo()
 	_pending_color = current_color
 	_color_switch_timer = 0.0
 	_color_cooldown_timer = 0.0
+	_last_knockback = 0.0
+	_wall_bounce_allowed = false
+	_wall_hit_reported = false
 	_facing = 1.0
 	_armature.scale = _base_armature_scale
 	_armature.rotation = _base_armature_rotation

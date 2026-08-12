@@ -28,9 +28,17 @@ enum MatchState {
 
 ## Emitted whenever the match state changes.
 signal state_changed(state: MatchState)
+## Emitted when a round ends with a winner.
+signal round_won(winner: PlayerController)
+## Emitted when the match is won.
+signal match_won(winner: PlayerController)
 
 var p1: PlayerController
 var p2: PlayerController
+var _p1_bar: ProgressBar
+var _p2_bar: ProgressBar
+var _p1_pips: Label
+var _p2_pips: Label
 
 var _state: MatchState = MatchState.WAITING
 var _p1_rounds: int = 0
@@ -105,18 +113,24 @@ func _on_player_died(_loser: PlayerController) -> void:
 			_p1_rounds += 1
 		else:
 			_p2_rounds += 1
+		round_won.emit(_last_round_winner)
 	_set_state(MatchState.ROUND_OVER)
 	await get_tree().create_timer(round_over_duration).timeout
 	if _state != MatchState.ROUND_OVER:
 		return
 	if _p1_rounds >= rounds_to_win or _p2_rounds >= rounds_to_win:
+		var winner: PlayerController = p1 if _p1_rounds > _p2_rounds else p2
 		_set_state(MatchState.MATCH_OVER)
+		match_won.emit(winner)
 	else:
 		_reset_round()
 
 ## Restores both players in place (no scene reload) and starts the next round.
 func _reset_round() -> void:
 	_set_state(MatchState.ROUND_RESET)
+	var feedback := get_parent().get_node_or_null("CombatFeedback") as CombatFeedback
+	if feedback != null:
+		feedback.reset_presentation()
 	p1.reset_round()
 	p2.reset_round()
 	_round_number += 1
@@ -133,7 +147,64 @@ func _build_hud() -> void:
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	_label.offset_top = 24
+	_label.offset_bottom = 112
 	layer.add_child(_label)
+
+	_p1_bar = _make_health_bar(&"P1HealthBar", true)
+	_p1_bar.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_p1_bar.position = Vector2(16, 8)
+	layer.add_child(_p1_bar)
+	_p1_pips = _make_pips(&"P1Pips", true)
+	_p1_pips.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_p1_pips.position = Vector2(16, 22)
+	layer.add_child(_p1_pips)
+
+	_p2_bar = _make_health_bar(&"P2HealthBar", false)
+	_p2_bar.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_p2_bar.position = Vector2(-316, 8)
+	_p2_bar.size = Vector2(300, 14)
+	layer.add_child(_p2_bar)
+	_p2_pips = _make_pips(&"P2Pips", false)
+	_p2_pips.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_p2_pips.position = Vector2(-316, 22)
+	_p2_pips.size = Vector2(300, 24)
+	_p2_pips.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	layer.add_child(_p2_pips)
+
+func _make_health_bar(bar_name: StringName, is_p1: bool) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.name = bar_name
+	bar.min_value = 0.0
+	bar.max_value = float(PlayerController.MAX_HEALTH)
+	bar.value = float(PlayerController.MAX_HEALTH)
+	bar.show_percentage = false
+	bar.custom_minimum_size = Vector2(300, 14)
+	bar.size = Vector2(300, 14)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(1.0, 0.26, 0.26) if is_p1 else Color(0.26, 0.8, 1.0)
+	bar.add_theme_stylebox_override("fill", fill)
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.0, 0.0, 0.0, 0.55)
+	bar.add_theme_stylebox_override("background", bg)
+	return bar
+
+func _make_pips(pip_name: StringName, is_p1: bool) -> Label:
+	var pips := Label.new()
+	pips.name = pip_name
+	pips.add_theme_font_size_override("font_size", 16)
+	pips.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0) if is_p1 else Color(0.6, 0.9, 1.0))
+	return pips
+
+func _process(_delta: float) -> void:
+	if p1 == null or p2 == null:
+		return
+	if _p1_bar != null:
+		_p1_bar.value = float(p1.health)
+		_p2_bar.value = float(p2.health)
+	if _p1_pips != null:
+		var max_rounds := rounds_to_win - 1
+		_p1_pips.text = "●".repeat(clampi(_p1_rounds, 0, max_rounds)) + "○".repeat(maxi(max_rounds - _p1_rounds, 0))
+		_p2_pips.text = "●".repeat(clampi(_p2_rounds, 0, max_rounds)) + "○".repeat(maxi(max_rounds - _p2_rounds, 0))
 
 func _update_hud() -> void:
 	if _label == null:

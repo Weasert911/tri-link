@@ -18,3 +18,9 @@ outline_width = 0.001
 
 [node name="CombatFeedback" type="Node" parent="." unique_id=1895286541]
 script = ExtResource("4_feedback")
+camera_path = null
+light_hit_stop = null
+heavy_hit_stop = null
+light_shake = null
+heavy_shake = null
+critical_hit_stop = null
