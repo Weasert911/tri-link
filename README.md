@@ -2,10 +2,12 @@
 
 Trilink PvP is a two-player LAN-based 2.5D arena fighting game. Two stylized robots battle in a compact sci-fi arena using hand-to-hand combat, RGB color manipulation, wall-mounted spike hazards, knockback, and a mid-round gravity shift.
 
+[Website](https://weasert911.github.io/tri-link/) | [Download for Windows](https://github.com/Weasert911/tri-link/releases/latest/download/Trilink-v0.1.0-windows-x86_64.zip) | [Releases](https://github.com/Weasert911/tri-link/releases)
+
 The game is designed to be immediately readable while creating tactical depth through color matching and positioning. Players must decide when to become vulnerable in order to attack, when to phase through an opponent to escape, and when to trade damage for control of the arena.
 
 > [!NOTE]
-> This project is in pre-production. The repository currently contains the Godot project shell, an empty prototype scene, RGB materials, and a sci-fi environment asset kit. The gameplay systems below describe the target MVP and are not implemented yet.
+> This repository contains the playable vertical slice: local two-player combat, RGB interactions, round flow, presentation effects, menus, settings, controller assignment, and a live AI showcase.
 
 ## Core Combat Loop
 
@@ -65,15 +67,43 @@ Each fighter has an HP bar and one active state: red, green, or blue.
 3. Import `project.godot` through the Godot Project Manager.
 4. Open the project in the editor.
 
-There is not yet a playable main scene. Open `scenes/prt_scene.tscn` to inspect the current prototype scene.
+Run the project to open `scenes/main.tscn`. The main menu uses the live arena as its background. Press `F2` to toggle the menu during showcase capture, or `F1` to hide all UI.
+
+## Controls
+
+- Player 1 defaults: `A`/`D`, `Space`, `F`, `X`, `End`, and `1`/`2`/`3`.
+- Player 2 defaults: arrow keys, `Enter`, `0`, numpad `7`, numpad `2`, and `7`/`8`/`9`.
+- Joypads are assigned in device order and use left stick, `A` jump, `B` roll, `X` light, `Y` heavy, and D-pad RGB switching.
+- All keyboard and joypad buttons can be rebound under Settings > Controls.
+
+## Build
+
+Install matching Godot export templates, then run:
+
+```powershell
+godot --headless --path . --export-release "Windows Desktop" build/Trilink.exe
+```
+
+Settings persist in `user://settings.cfg`. Audio buses are initialized even though this slice does not ship audio assets.
+
+## Tests
+
+Run each SceneTree harness from the repository root:
+
+```powershell
+godot --headless --path . --script tests/combat_test.gd
+godot --headless --path . --script tests/foundation_test.gd
+godot --headless --path . --script tests/flow_test.gd
+```
 
 ## Project Structure
 
 ```text
 assets/      3D models, materials, and other game assets
 scenes/      Godot scenes
-scripts/     Gameplay scripts (planned)
-shaders/     Custom shaders (planned)
+scripts/     Gameplay, flow, feedback, and UI scripts
+autoload/    Settings, input, device, and audio services
+shaders/     Toon, combat, and menu treatment shaders
 ```
 
 ## Credits

@@ -1,0 +1,46 @@
+name: Deploy website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "logo.png"
+      - "tools/toon_preview.png"
+      - "tools/toon_red_preview.png"
+      - "tools/toon_green_preview.png"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble website
+        run: |
+          mkdir -p _site/assets
+          cp -R docs/. _site/
+          cp logo.png _site/assets/logo.png
+          cp tools/toon_preview.png _site/assets/toon-preview.png
+          cp tools/toon_red_preview.png _site/assets/toon-red.png
+          cp tools/toon_green_preview.png _site/assets/toon-green.png
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

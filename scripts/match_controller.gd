@@ -25,6 +25,8 @@ enum MatchState {
 @export var round_start_duration: float = 1.2
 ## Seconds the ROUND_OVER result banner stays on screen.
 @export var round_over_duration: float = 1.8
+@export var showcase_mode := false
+@export var showcase_restart_delay := 2.5
 
 ## Emitted whenever the match state changes.
 signal state_changed(state: MatchState)
@@ -46,6 +48,7 @@ var _p2_rounds: int = 0
 var _round_number: int = 1
 var _last_round_winner: PlayerController = null
 var _label: Label = null
+var _flow_revision := 0
 
 func _ready() -> void:
 	await _find_players()
@@ -60,8 +63,9 @@ func _ready() -> void:
 	_update_hud()
 	p1.lock_controls()
 	p2.lock_controls()
-	await get_tree().create_timer(wait_duration).timeout
-	if _state == MatchState.WAITING:
+	var revision := _flow_revision
+	await get_tree().create_timer(wait_duration, false).timeout
+	if _state == MatchState.WAITING and revision == _flow_revision:
 		_start_round()
 
 ## Players add themselves to the "players" group in _ready; find them by
@@ -87,8 +91,9 @@ func _set_state(new_state: MatchState) -> void:
 
 func _start_round() -> void:
 	_set_state(MatchState.ROUND_START)
-	await get_tree().create_timer(round_start_duration).timeout
-	if _state != MatchState.ROUND_START:
+	var revision := _flow_revision
+	await get_tree().create_timer(round_start_duration, false).timeout
+	if _state != MatchState.ROUND_START or revision != _flow_revision:
 		return
 	p1.unlock_controls()
 	p2.unlock_controls()
@@ -99,8 +104,11 @@ func _start_round() -> void:
 func _on_player_died(_loser: PlayerController) -> void:
 	if _state != MatchState.FIGHTING:
 		return
+	var revision := _flow_revision
 	# One physics frame lets a simultaneous KO register as a draw.
 	await get_tree().physics_frame
+	if revision != _flow_revision or _state != MatchState.FIGHTING:
+		return
 	p1.lock_controls()
 	p2.lock_controls()
 	_last_round_winner = null
@@ -115,13 +123,17 @@ func _on_player_died(_loser: PlayerController) -> void:
 			_p2_rounds += 1
 		round_won.emit(_last_round_winner)
 	_set_state(MatchState.ROUND_OVER)
-	await get_tree().create_timer(round_over_duration).timeout
-	if _state != MatchState.ROUND_OVER:
+	await get_tree().create_timer(round_over_duration, false).timeout
+	if _state != MatchState.ROUND_OVER or revision != _flow_revision:
 		return
 	if _p1_rounds >= rounds_to_win or _p2_rounds >= rounds_to_win:
 		var winner: PlayerController = p1 if _p1_rounds > _p2_rounds else p2
 		_set_state(MatchState.MATCH_OVER)
 		match_won.emit(winner)
+		if showcase_mode:
+			await get_tree().create_timer(showcase_restart_delay, false).timeout
+			if _state == MatchState.MATCH_OVER and revision == _flow_revision:
+				restart_match()
 	else:
 		_reset_round()
 
@@ -135,6 +147,28 @@ func _reset_round() -> void:
 	p2.reset_round()
 	_round_number += 1
 	_start_round()
+
+func restart_round() -> void:
+	if p1 == null or p2 == null:
+		return
+	_flow_revision += 1
+	_last_round_winner = null
+	_reset_round()
+
+func restart_match() -> void:
+	if p1 == null or p2 == null:
+		return
+	_flow_revision += 1
+	_p1_rounds = 0
+	_p2_rounds = 0
+	_round_number = 0
+	_last_round_winner = null
+	_reset_round()
+
+func set_hud_visible(visible: bool) -> void:
+	var hud := get_node_or_null("HUD")
+	if hud != null:
+		hud.visible = visible
 
 func _build_hud() -> void:
 	var layer := CanvasLayer.new()

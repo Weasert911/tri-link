@@ -21,6 +21,7 @@ enum ImpactTier { LIGHT, HEAVY, CRITICAL, WALL, SPIKE }
 
 const SHARD_POOL_SIZE := 24
 const STYLE_LABEL_COUNT := 2
+const DAMAGE_LABEL_COUNT := 8
 const FLASH_SHADER := preload("res://shaders/transitional_flash.gdshader")
 const PLAYER_COLORS := [Color(1.0, 0.16, 0.16), Color(0.18, 1.0, 0.2), Color(0.22, 0.42, 1.0)]
 
@@ -54,6 +55,16 @@ var _style_labels: Array[Label3D] = []
 var _style_idx := 0
 var _style_tweens: Dictionary = {}
 var _match_controller: MatchController = null
+var _damage_labels: Array[Label3D] = []
+var _damage_idx := 0
+var _damage_tweens: Dictionary = {}
+var _shake_enabled := true
+var _hit_stop_enabled := true
+var _vfx_enabled := true
+var _combo_enabled := true
+var _damage_enabled := true
+var _slow_motion_enabled := true
+var _color_effects_enabled := true
 
 func _ready() -> void:
 	_rng.randomize()
@@ -62,6 +73,10 @@ func _ready() -> void:
 		_camera_origin = _camera.transform
 		_camera_fov = _camera.fov
 	_build_flash_layer()
+	_apply_settings()
+	var settings := get_node_or_null("/root/SettingsManager")
+	if settings != null:
+		settings.settings_changed.connect(_on_setting_changed)
 	for player in get_tree().get_nodes_in_group(&"players"):
 		_connect_player(player)
 	var match_node := get_parent().get_node_or_null("MatchController")
@@ -175,6 +190,39 @@ func _ensure_style_labels() -> void:
 		get_parent().add_child(label)
 		label.visible = false
 		_style_labels.append(label)
+
+func _ensure_damage_labels() -> void:
+	if not _damage_labels.is_empty():
+		return
+	for i in DAMAGE_LABEL_COUNT:
+		var label := Label3D.new()
+		label.name = &"DamageNumber"
+		label.font_size = 36
+		label.outline_size = 8
+		label.no_depth_test = true
+		get_parent().add_child(label)
+		label.hide()
+		_damage_labels.append(label)
+
+func _show_damage(value: int, position: Vector3, heavy: bool) -> void:
+	if not _damage_enabled:
+		return
+	_ensure_damage_labels()
+	var label := _damage_labels[_damage_idx]
+	_damage_idx = (_damage_idx + 1) % _damage_labels.size()
+	var old: Tween = _damage_tweens.get(label)
+	if old != null and is_instance_valid(old):
+		old.kill()
+	label.text = str(value)
+	label.modulate = Color(1.0, 0.62, 0.2) if heavy else Color.WHITE
+	label.global_position = position + Vector3(0.0, 1.25, 0.0)
+	label.scale = Vector3.ONE * (1.25 if heavy else 1.0)
+	label.show()
+	var tween := create_tween().set_parallel()
+	tween.tween_property(label, "global_position", label.global_position + Vector3(0.0, 0.65, 0.0), 0.55)
+	tween.tween_property(label, "modulate:a", 0.0, 0.55).set_delay(0.2)
+	tween.chain().tween_callback(label.hide)
+	_damage_tweens[label] = tween
 
 func _spawn_shard(position: Vector3, direction: Vector3, color: Color, speed: float) -> void:
 	_ensure_pool()
@@ -361,6 +409,8 @@ func _show_style(text: String, position: Vector3, color: Color, peak_scale := 1.
 	_style_tweens[label] = tween
 
 func _slow_motion(scale: float, duration: float) -> void:
+	if not _slow_motion_enabled:
+		return
 	_critical_sequence += 1
 	var sequence := _critical_sequence
 	Engine.time_scale = scale
@@ -390,7 +440,7 @@ func camera_is_at_rest() -> bool:
 	return _camera == null or (_camera.transform.is_equal_approx(_camera_origin) and is_equal_approx(_camera.fov, _camera_fov))
 
 func _restore_time_scale(sequence: int, duration: float) -> void:
-	await get_tree().create_timer(duration, true, false, true).timeout
+	await get_tree().create_timer(duration, false, false, true).timeout
 	if sequence == _critical_sequence:
 		Engine.time_scale = 1.0
 
@@ -435,18 +485,44 @@ func _clear_flash() -> void:
 
 func _on_hit_confirmed(attacker: PlayerController, victim: PlayerController, position: Vector3, heavy: bool) -> void:
 	var duration := heavy_hit_stop if heavy else light_hit_stop
-	attacker.apply_hit_stop(duration)
-	victim.apply_hit_stop(duration)
-	_shake_strength = heavy_shake if heavy else light_shake
+	if _hit_stop_enabled:
+		attacker.apply_hit_stop(duration)
+		victim.apply_hit_stop(duration)
+	_shake_strength = (heavy_shake if heavy else light_shake) if _shake_enabled else 0.0
 	_shake_time = 0.12
 	_shake_axis = Vector3.RIGHT
-	_spawn_impact(position, ImpactTier.HEAVY if heavy else ImpactTier.LIGHT)
-	if heavy:
+	if _vfx_enabled:
+		_spawn_impact(position, ImpactTier.HEAVY if heavy else ImpactTier.LIGHT)
+	if heavy and _vfx_enabled:
 		_spawn_shower(position, Vector3.UP, Color(1.0, 0.7, 0.3), 2.2, 2)
 		_flash(0.3, 0.003, 0.07, Color(1.0, 0.85, 0.6))
 	_combo_counts[victim] = int(_combo_counts.get(victim, 0)) + 1
 	_combo_timers[victim] = 0.9
-	_show_combo(victim, _combo_counts[victim])
+	if _combo_enabled:
+		_show_combo(victim, _combo_counts[victim])
+	var attack_id := attacker.current_attack()
+	if PlayerController.ATTACKS.has(attack_id):
+		var damage := int(PlayerController.ATTACKS[attack_id]["damage"])
+		if attacker._attack_critical:
+			damage = roundi(damage * float(PlayerController.ATTACKS[attack_id].get("critical_damage_mult", 1.5)))
+		_show_damage(damage, position, heavy)
+
+func _apply_settings() -> void:
+	var settings := get_node_or_null("/root/SettingsManager")
+	if settings == null:
+		return
+	_shake_enabled = settings.get_bool(&"gameplay", &"screen_shake", true)
+	_hit_stop_enabled = settings.get_bool(&"gameplay", &"hit_stop", true)
+	_vfx_enabled = settings.get_bool(&"gameplay", &"combat_vfx", true)
+	_combo_enabled = settings.get_bool(&"gameplay", &"combo_counter", true)
+	_damage_enabled = settings.get_bool(&"gameplay", &"damage_numbers", true)
+	_color_effects_enabled = settings.get_bool(&"gameplay", &"color_effects", true)
+	flash_enabled = settings.get_bool(&"gameplay", &"screen_flash", true)
+	_slow_motion_enabled = settings.get_bool(&"gameplay", &"slow_motion", true)
+
+func _on_setting_changed(section: StringName, _key: StringName, _value: Variant) -> void:
+	if section == &"gameplay":
+		_apply_settings()
 
 func _on_critical_hit(attacker: PlayerController, victim: PlayerController, position: Vector3, _heavy: bool) -> void:
 	attacker.apply_hit_stop(critical_hit_stop)
@@ -497,6 +573,8 @@ func _on_phase_missed(_attacker: PlayerController, _target: PlayerController, po
 	_show_style("PHASE", position, Color(0.4, 0.75, 1.0), 1.25)
 
 func _on_color_changed(_color: PlayerController.PlayerColor, player: PlayerController) -> void:
+	if not _color_effects_enabled:
+		return
 	var position := player.global_position + Vector3.UP * 0.9
 	_spawn_switch_effect(position, player.current_color)
 	_spawn_shower(position, Vector3.UP, PLAYER_COLORS[player.current_color], 1.6, 4)

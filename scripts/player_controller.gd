@@ -362,6 +362,8 @@ var _roll_direction := 0.0
 var _roll_backward := false
 var _roll_input_held := false
 var _test_joy_axis_x: float = 0.0
+var _ai_input: Dictionary = {}
+var _ai_previous: Dictionary = {}
 
 func _ready() -> void:
 	if player_index == 2:
@@ -435,6 +437,7 @@ func _get_opponent() -> PlayerController:
 
 func _physics_process(delta: float) -> void:
 	_poll_controller_buttons()
+	_commit_ai_input.call_deferred()
 	if _animation_system != null:
 		_animation_system.ensure_started()
 	if _animation_system != null:
@@ -482,6 +485,9 @@ func _physics_process(delta: float) -> void:
 	_update_coyote_and_buffer_timers(delta)
 	_was_grounded = is_on_floor()
 
+func _commit_ai_input() -> void:
+	_ai_previous = _ai_input.duplicate()
+
 ## KO'd players only fall and slide; input, attacks and animation state
 ## updates are disabled so the Death01 animation plays uninterrupted.
 func _process_death(delta: float) -> void:
@@ -497,9 +503,9 @@ func _process_attack(delta: float) -> void:
 	if _current_attack == &"":
 		if _hitstun_timer > 0.0:
 			return
-		if _is_action_just_pressed(_attack_action, JOY_BUTTON_X) and can_attack and not is_color_switching():
+		if _action_just_pressed(&"light") and can_attack and not is_color_switching():
 			_start_light_attack()
-		elif _is_action_just_pressed(_heavy_action, JOY_BUTTON_Y) and can_attack and not is_color_switching():
+		elif _action_just_pressed(&"heavy") and can_attack and not is_color_switching():
 			_reset_combo()
 			_start_attack(&"hook")
 		return
@@ -535,10 +541,10 @@ func _process_attack(delta: float) -> void:
 	var can_cancel := bool(def.get("can_cancel", true)) and _attack_connected
 	var cancel_start := float(def.get("cancel_start", startup + active_time))
 	var cancel_end := float(def.get("cancel_end", total_duration))
-	var buffered_input := _is_action_just_pressed(_attack_action, JOY_BUTTON_X) or _is_action_just_pressed(_heavy_action, JOY_BUTTON_Y)
+	var buffered_input := _action_just_pressed(&"light") or _action_just_pressed(&"heavy")
 	if buffered_input and can_attack:
 		_input_buffer_timer = input_buffer_window
-		_buffer_heavy = _is_action_just_pressed(_heavy_action, JOY_BUTTON_Y)
+		_buffer_heavy = _action_just_pressed(&"heavy")
 		_accelerate_current_attack()
 	_input_buffer_timer = maxf(_input_buffer_timer - delta, 0.0)
 	if can_cancel and _attack_elapsed >= cancel_start and _attack_elapsed <= cancel_end and _input_buffer_timer > 0.0 and _queued_attack == &"":
@@ -698,14 +704,12 @@ func _reset_combo() -> void:
 func _process_roll_input() -> void:
 	if _rolling or _current_attack != &"" or _hitstun_timer > 0.0 or _controls_locked or not is_on_floor():
 		return
-	var horizontal := Input.get_axis(_move_left_action, _move_right_action)
-	var vertical := 0.0
-	if controller_device >= 0:
-		horizontal = _test_joy_axis_x if not is_zero_approx(_test_joy_axis_x) else Input.get_joy_axis(controller_device, JOY_AXIS_LEFT_X)
-		vertical = Input.get_joy_axis(controller_device, JOY_AXIS_LEFT_Y)
+	var horizontal := _axis(&"move_left", &"move_right")
+	var device := _controller_device()
+	var vertical := Input.get_joy_axis(device, JOY_AXIS_LEFT_Y) if device >= 0 else 0.0
 	var lower_diagonal := absf(vertical) >= roll_diagonal_threshold and absf(horizontal) >= roll_diagonal_threshold
-	var keyboard_roll := Input.is_action_pressed(_roll_action) and absf(horizontal) > 0.0
-	var controller_roll := _is_action_just_pressed(_roll_action, JOY_BUTTON_B) and absf(horizontal) >= controller_deadzone
+	var keyboard_roll := _action_pressed(&"roll") and absf(horizontal) > 0.0
+	var controller_roll := _action_just_pressed(&"roll") and absf(horizontal) >= controller_deadzone
 	var roll_input := lower_diagonal or keyboard_roll or controller_roll
 	if roll_input and not _roll_input_held:
 		_start_roll(signf(horizontal))
@@ -956,11 +960,11 @@ func _process_color_input(delta: float) -> void:
 	if _color_cooldown_timer > 0.0:
 		return
 	var new_color: PlayerColor = current_color
-	if _is_action_just_pressed(_red_action, JOY_BUTTON_DPAD_LEFT):
+	if _action_just_pressed(&"red"):
 		new_color = PlayerColor.RED
-	elif _is_action_just_pressed(_green_action, JOY_BUTTON_DPAD_UP):
+	elif _action_just_pressed(&"green"):
 		new_color = PlayerColor.GREEN
-	elif _is_action_just_pressed(_blue_action, JOY_BUTTON_DPAD_RIGHT):
+	elif _action_just_pressed(&"blue"):
 		new_color = PlayerColor.BLUE
 	if new_color != current_color:
 		_pending_color = new_color
@@ -1016,11 +1020,7 @@ func _get_input() -> void:
 	if _controls_locked:
 		_movement_input = 0.0
 		return
-	var keyboard_input := Input.get_axis(_move_left_action, _move_right_action)
-	var controller_input := 0.0
-	if controller_device >= 0:
-		controller_input = Input.get_joy_axis(controller_device, JOY_AXIS_LEFT_X)
-	_movement_input = resolve_movement_input(keyboard_input, controller_input)
+	_movement_input = _axis(&"move_left", &"move_right")
 
 func resolve_movement_input(keyboard_input: float, analog_input: float) -> float:
 	var controller_input := analog_input
@@ -1060,9 +1060,9 @@ func _update_gravity(delta: float) -> void:
 func _handle_jump() -> void:
 	if not can_jump or _hitstun_timer > 0.0:
 		return
-	if _is_action_just_pressed(_jump_action, JOY_BUTTON_A):
+	if _action_just_pressed(&"jump"):
 		_jump_buffer_timer = jump_buffer_time
-	if _is_action_just_released(_jump_action, JOY_BUTTON_A) and velocity.y > 0.0:
+	if _action_just_released(&"jump") and velocity.y > 0.0:
 		velocity.y *= jump_cut_multiplier
 	if _jump_buffer_timer > 0.0 and _coyote_timer > 0.0 and is_on_floor():
 		velocity.y = jump_velocity
@@ -1225,19 +1225,71 @@ func _set_grounded_animation() -> void:
 		else:
 			_play_animation(&"Sprint")
 
-func _is_action_just_pressed(action: StringName, button: JoyButton) -> bool:
-	return Input.is_action_just_pressed(action) or (controller_device >= 0 and _joy_current.get(button, false) and not _joy_previous.get(button, false))
+func _action_pressed(action_id: StringName) -> bool:
+	var action := _managed_action_name(action_id)
+	var button := _managed_joy_button(action_id)
+	return Input.is_action_pressed(action) or bool(_joy_current.get(button, false)) or bool(_ai_input.get(action_id, false))
 
-func _is_action_just_released(action: StringName, button: JoyButton) -> bool:
-	return Input.is_action_just_released(action) or (controller_device >= 0 and not _joy_current.get(button, false) and _joy_previous.get(button, false))
+func _action_just_pressed(action_id: StringName) -> bool:
+	var action := _managed_action_name(action_id)
+	var button := _managed_joy_button(action_id)
+	var joy_pressed: bool = button >= 0 and bool(_joy_current.get(button, false)) and not bool(_joy_previous.get(button, false))
+	var ai_pressed := bool(_ai_input.get(action_id, false)) and not bool(_ai_previous.get(action_id, false))
+	return Input.is_action_just_pressed(action) or joy_pressed or ai_pressed
+
+func _action_just_released(action_id: StringName) -> bool:
+	var action := _managed_action_name(action_id)
+	var button := _managed_joy_button(action_id)
+	var joy_released: bool = button >= 0 and not bool(_joy_current.get(button, false)) and bool(_joy_previous.get(button, false))
+	var ai_released := not bool(_ai_input.get(action_id, false)) and bool(_ai_previous.get(action_id, false))
+	return Input.is_action_just_released(action) or joy_released or ai_released
+
+func _axis(negative: StringName, positive: StringName) -> float:
+	var keyboard := Input.get_axis(_managed_action_name(negative), _managed_action_name(positive))
+	var device := _controller_device()
+	var analog := _test_joy_axis_x if not is_zero_approx(_test_joy_axis_x) else (Input.get_joy_axis(device, JOY_AXIS_LEFT_X) if device >= 0 else 0.0)
+	var ai_axis := float(_ai_input.get(&"move_axis", 0.0))
+	return resolve_movement_input(keyboard, ai_axis if not is_zero_approx(ai_axis) else analog)
+
+func set_ai_input(state: Dictionary) -> void:
+	_ai_input = state.duplicate()
+
+func clear_ai_input() -> void:
+	_ai_input.clear()
+	_ai_previous.clear()
+
+func _controller_device() -> int:
+	var manager := get_node_or_null("/root/DeviceManager")
+	return manager.device_for_player(player_index) if manager != null else controller_device
 
 func _poll_controller_buttons() -> void:
 	_joy_previous = _joy_current.duplicate()
 	_joy_current.clear()
-	if controller_device < 0:
+	var device := _controller_device()
+	if device < 0:
 		return
-	for button in [JOY_BUTTON_A, JOY_BUTTON_B, JOY_BUTTON_X, JOY_BUTTON_Y, JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_RIGHT]:
-		_joy_current[button] = Input.is_joy_button_pressed(controller_device, button)
+	for action_id in [&"jump", &"roll", &"light", &"heavy", &"red", &"green", &"blue"]:
+		var button := _managed_joy_button(action_id)
+		if button >= 0:
+			_joy_current[button] = Input.is_joy_button_pressed(device, button)
+
+func _managed_action_name(action_id: StringName) -> StringName:
+	var manager := get_node_or_null("/root/InputManager")
+	if manager != null:
+		return manager.action_name(player_index, action_id)
+	var actions := {
+		&"move_left": _move_left_action, &"move_right": _move_right_action, &"jump": _jump_action,
+		&"light": _attack_action, &"heavy": _heavy_action, &"roll": _roll_action,
+		&"red": _red_action, &"green": _green_action, &"blue": _blue_action,
+	}
+	return actions.get(action_id, action_id)
+
+func _managed_joy_button(action_id: StringName) -> int:
+	var manager := get_node_or_null("/root/InputManager")
+	if manager != null:
+		return manager.joy_button(player_index, action_id)
+	var buttons := {&"jump": JOY_BUTTON_A, &"roll": JOY_BUTTON_B, &"light": JOY_BUTTON_X, &"heavy": JOY_BUTTON_Y, &"red": JOY_BUTTON_DPAD_LEFT, &"green": JOY_BUTTON_DPAD_UP, &"blue": JOY_BUTTON_DPAD_RIGHT}
+	return int(buttons.get(action_id, -1))
 
 ## Locomotion animations play forward while moving front and reversed while
 ## moving back, and their playback rate follows the character's ground speed.
