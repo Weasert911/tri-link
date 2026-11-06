@@ -9,6 +9,10 @@ The game is designed to be immediately readable while creating tactical depth th
 > [!NOTE]
 > This repository contains the playable vertical slice: local two-player combat, RGB interactions, round flow, presentation effects, menus, settings, controller assignment, and a live AI showcase.
 
+<img width="100%" alt="Trilink shader styles: PS1-style versus toon" src="visual.png">
+
+Both looks are implemented and readable in-engine; toggle between them in settings.
+
 ## Core Combat Loop
 
 Each fighter has an HP bar and one active state: red, green, or blue.
